@@ -33,6 +33,7 @@ public class RegisterActivity extends Activity {
     private String mName, mEmail, mPassword, mCountry;
     private ArrayList<User> userList = new ArrayList<User>();
     private boolean emailInUse = false;
+    private String mImage = "";
 
     // Firebase Realtime Database references
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
@@ -159,11 +160,12 @@ public class RegisterActivity extends Activity {
         mCountry = ((EditText) findViewById(R.id.country)).getText().toString();
 
         // Create User instance based on validated data
-        User user = new User(mName, mEmail, mPassword, mCountry);
+        User user = new User(mName, mEmail, mPassword, mCountry, mImage);
 
         // Specify unique value, i.e. Primary Key, for User record and add this user to Firebase Database
         String key = mUserRef.push().getKey();
-        mRootRef.child(key).setValue(user);
+        String userName = mEmail.substring(0, mEmail.indexOf("."));
+        mRootRef.child(userName).setValue(user);
 
         // Go to Login page
         Intent intent = new Intent(this, LoginActivity.class);
@@ -223,4 +225,3 @@ public class RegisterActivity extends Activity {
         }
     }
 }
-

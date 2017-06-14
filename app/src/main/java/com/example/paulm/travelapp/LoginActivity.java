@@ -42,6 +42,7 @@ public class LoginActivity extends Activity {
     private String mName, mEmail;
     private ArrayList<User> userList = new ArrayList<User>();
     private boolean emailInUse = false, validLogin = false;
+    private User passUser;
 
     // Firebase Realtime Database references
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
@@ -102,6 +103,7 @@ public class LoginActivity extends Activity {
                 // If email is valid check Method is invoked to validate password
                 if(check(u, password)){
                     validLogin = true;
+                    passUser = u;
                 } else {
                     validLogin = false;
                 }
@@ -138,7 +140,7 @@ public class LoginActivity extends Activity {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    login();
+                    login(passUser);
                 }
             }, 2000);
         }
@@ -146,9 +148,10 @@ public class LoginActivity extends Activity {
     }
 
     // If login credentials are met this Method is invoked
-    private void login(){
-        // Go to user homapage
+    private void login(User user){
+        // Go to user homapage and pass User Object
         Intent intent = new Intent(this, UserHomeActivity.class);
+        intent.putExtra("user", user);
         startActivity(intent);
     }
 

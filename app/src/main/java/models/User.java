@@ -1,18 +1,21 @@
 package models;
 
+import java.io.Serializable;
+
 /**
  * Created by PaulM on 10/06/2017.
  */
 
-public class User {
-    private String name, email, password, country;
+public class User implements Serializable{
+    private String name, email, password, country, img;
     public User(){}
 
-    public User(String name, String email, String password, String country) {
+    public User(String name, String email, String password, String country, String img) {
         this.name = name;
         this.email = email;
         this.password = password;
         this.country = country;
+        this.img = img;
     }
 
     public String getName() {
@@ -45,5 +48,13 @@ public class User {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public String getImg() {
+        return img;
+    }
+
+    public void setImg(String img) {
+        this.img = img;
     }
 }
