@@ -2,25 +2,32 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 xmlns:app="http://schemas.android.com/apk/res-auto"
 xmlns:tools="http://schemas.android.com/tools"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
-tools:context="com.example.paulm.travelapp.UserHomeActivity">
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.paulm.travelapp.UserHomeActivity">
 
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
 
-    <ImageView android:id="@+id/imageView1"
-        android:layout_height="100dp"
-        android:layout_width="100dp"
-        android:scaleType="fitXY"
-        android:src="@drawable/defaultimg"></ImageView>
+        <ImageView android:id="@+id/imageView1"
+            android:layout_height="100dp"
+            android:layout_width="100dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/defaultimg"></ImageView>
 
-    <TextView
-        android:id="@+id/userInfo"
-        android:layout_width="wrap_content"
-        android:layout_height="100dp"
-        android:layout_marginLeft="15dp"
-        android:textColor="@color/colorPrimary"
-        android:textStyle="italic"
-        android:textSize="20dp"/>
+        <TextView
+            android:id="@+id/userInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            android:layout_marginLeft="15dp"
+            android:textColor="@color/colorPrimary"
+            android:textStyle="italic"
+            android:textSize="20dp"/>
+
+    </LinearLayout>
     <!--<Button
         android:id="@+id/button1"
         android:layout_width="wrap_content"
@@ -29,5 +36,46 @@ tools:context="com.example.paulm.travelapp.UserHomeActivity">
         android:onClick="takePic"
 
         android:text="CLICK"></Button>-->
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:layout_height="wrap_content" >
+
+        <EditText
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:minLines="4"
+            android:maxLines="4"
+            android:id="@+id/edit"/>
+
+        <!--<fragment
+            android:id="@+id/list"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />-->
+
+        <EditText
+            android:id="@+id/enterDestination"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/prompt_destination"
+            android:maxLines="1" />
+
+        <!--<fragment
+            android:id="@+id/product"
+            android:layout_width="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="20dp"
+            android:layout_height="wrap_content" />-->
+
+        <fragment
+            android:name="com.example.paulm.travelapp.ActionListFragment"
+            android:id="@+id/fragment_place"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </LinearLayout>
 
 </LinearLayout>

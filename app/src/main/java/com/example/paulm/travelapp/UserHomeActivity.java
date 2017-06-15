@@ -2,16 +2,21 @@ package com.example.paulm.travelapp;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,7 +27,16 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.util.ArrayList;
 
 import models.User;
@@ -41,6 +55,8 @@ public class UserHomeActivity extends Activity {
     // Firebase Realtime Database references
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
     DatabaseReference mUserRef = mRootRef.child("user");
+
+    private String result;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +116,27 @@ public class UserHomeActivity extends Activity {
             @Override
             public void onCancelled(DatabaseError databaseError) {}
         });
+
+
+        ///////////////////////////////////////////////////////////////////////////////
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo ni = cm.getActiveNetworkInfo();
+        if(ni != null && ni.isConnected()){
+            new MyAsyncTask().execute();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            System.out.println("Result in main thread: " + result);
+            ((EditText)findViewById(R.id.edit)).setText(result);
+        } else {
+            Toast.makeText(this, "No Connection!", Toast.LENGTH_LONG).show();
+            ((EditText)findViewById(R.id.edit)).setText("No Internet Connection");
+        }
+
+
     }
 
     /* Checks if external storage is available for read and write */
@@ -142,7 +179,7 @@ public class UserHomeActivity extends Activity {
                             u.setImg(photo.toString());
                             String userName = u.getEmail().substring(0, u.getEmail().indexOf("."));
                             //String img = BitMapToString(photo);
-                            mRootRef.child(userName).getRef().child("img").setValue(u.getImg());
+                            mRootRef.child(userName).getRef().child("img").setValue(photo.toString());
                         }
                     }
                 imageView.setImageBitmap(photo);
@@ -158,5 +195,57 @@ public class UserHomeActivity extends Activity {
             e.printStackTrace();
             recreate();
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    class MyAsyncTask extends AsyncTask {
+
+        @Override
+        protected Object doInBackground(Object[] params) {
+            StringBuffer sb = new StringBuffer();
+            URL url = null;
+            try {
+                url = new URL("http://api.geonames.org/earthquakesJSON?north=44.1&south=-9.9&east=-22.4&west=55.2&username=demo");
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+
+            HttpURLConnection c = null;
+
+            try {
+                c = (HttpURLConnection) url.openConnection();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                c.setRequestMethod("POST");
+            } catch (ProtocolException e) {
+                e.printStackTrace();
+            }
+
+            InputStream in = null;
+            try {
+                System.out.println("Responce code: " + c.getResponseCode());
+                in = new BufferedInputStream(c.getInputStream());
+                BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                String line = "";
+
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            setResult(sb.toString());
+            System.out.println("Responce Json: " + sb.toString());
+
+            return sb.toString();
+        }
+    }
+
+    public void setResult(String result) {
+        this.result = result;
     }
 }

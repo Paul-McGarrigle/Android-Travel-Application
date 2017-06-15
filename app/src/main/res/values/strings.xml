@@ -7,6 +7,7 @@
     <string name="prompt_name">Name</string>
     <string name="prompt_country">Country</string>
     <string name="action_sign_in">Login</string>
+    <string name="prompt_destination">Enter Destination</string>
     <string name="reg_action_sign_in">Register</string>
     <string name="action_sign_in_short">Sign in</string>
     <string name="error_invalid_email">Invalid, accepted email format is digits@digits.digits</string>
@@ -20,4 +21,7 @@
         completions."
     </string>
     <string name="title_activity_register">Sign up</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
