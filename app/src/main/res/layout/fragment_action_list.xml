@@ -2,15 +2,40 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#00ffff">
+    android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/textView1"
+
+    <Button
+        android:id="@+id/timeBtn"
+        style="?android:textAppearanceSmall"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:text="This is fragment No.1"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="@string/time_btn"
+        android:textStyle="bold" />
+    <Button
+        android:id="@+id/weatherBtn"
+        style="?android:textAppearanceSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="@string/weather_btn"
+        android:textStyle="bold" />
+    <Button
+        android:id="@+id/exchangeBtn"
+        style="?android:textAppearanceSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="@string/exchange_btn"
+        android:textStyle="bold" />
+    <Button
+        android:id="@+id/translateBtn"
+        style="?android:textAppearanceSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="@string/translate_btn"
         android:textStyle="bold" />
 
 </LinearLayout>

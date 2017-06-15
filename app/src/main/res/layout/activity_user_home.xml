@@ -64,15 +64,9 @@ xmlns:tools="http://schemas.android.com/tools"
             android:hint="@string/prompt_destination"
             android:maxLines="1" />
 
-        <!--<fragment
-            android:id="@+id/product"
-            android:layout_width="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="20dp"
-            android:layout_height="wrap_content" />-->
-
         <fragment
             android:name="com.example.paulm.travelapp.ActionListFragment"
+            android:layout_alignParentBottom="true"
             android:id="@+id/fragment_place"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

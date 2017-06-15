@@ -10,6 +10,10 @@
     <string name="prompt_destination">Enter Destination</string>
     <string name="reg_action_sign_in">Register</string>
     <string name="action_sign_in_short">Sign in</string>
+    <string name="time_btn">See Time Difference</string>
+    <string name="weather_btn">See Todays Weather</string>
+    <string name="exchange_btn">Get Exchange Rate</string>
+    <string name="translate_btn">Translate Phrase</string>
     <string name="error_invalid_email">Invalid, accepted email format is digits@digits.digits</string>
     <string name="error_email_not_in_use">No account associated with this email, please use register link</string>
     <string name="duplicate_email">Invalid, email already in use</string>

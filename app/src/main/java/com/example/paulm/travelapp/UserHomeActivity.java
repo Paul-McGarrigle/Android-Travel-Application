@@ -2,6 +2,9 @@ package com.example.paulm.travelapp;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -15,7 +18,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -27,6 +32,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -37,6 +47,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 
 import models.User;
@@ -47,6 +58,7 @@ public class UserHomeActivity extends Activity {
     private static final int PHOTO_TAKEN = 0;
     private ImageView imageView;
     private View textView;
+    private EditText editText;
     private File image;
     private User passedUser;
     private Uri fileUri;
@@ -58,6 +70,12 @@ public class UserHomeActivity extends Activity {
 
     private String result;
 
+    // essential URL structure is built using constants
+    public static final String ACCESS_KEY = "347b7abc9391d65585b6aa71c3e61577";
+    public static final String BASE_URL = "http://apilayer.net/api/";
+    public static final String ENDPOINT = "live";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +86,8 @@ public class UserHomeActivity extends Activity {
         textView = (TextView)this.findViewById(R.id.userInfo);
         ((TextView)textView).setText("User Name: " + passedUser.getName() + "\nCountry: " + passedUser.getCountry()
                 + "\nTap Photo to change Profile Picture");
+
+        //editText = (EditText)findViewById(R.id.edit);
 
         //isExternalStorageReadable();
         //isExternalStorageWritable();
@@ -95,6 +115,8 @@ public class UserHomeActivity extends Activity {
 
             }
         });
+
+
 
         if(passedUser.getImg() != ""){
             //byte[] decodedString = Base64.decode(passedUser.getImg(), Base64.DEFAULT);
@@ -136,7 +158,70 @@ public class UserHomeActivity extends Activity {
             ((EditText)findViewById(R.id.edit)).setText("No Internet Connection");
         }
 
+        Button exchange = (Button)findViewById(R.id.exchangeBtn);
+        exchange.setOnClickListener(new View.OnClickListener() {
 
+            public void onClick(View v) {
+                new AsyncTask<Void, Void, String>() {
+                    protected String doInBackground(Void... params) {
+
+                        try {
+                            return downloadHTML();
+                        } catch (Exception e) {
+                            Log.d("JWP", e.toString());
+                        }
+
+                        return "Can't reach server. Is Internet access enabled?";
+                    }
+
+                    @Override
+                    protected void onPostExecute(String result) {
+                        TextView textView = (TextView)findViewById(R.id.edit);
+
+                        try {
+                            JSONArray items = (JSONArray)(new JSONTokener(result).nextValue());
+                            String c = "";
+                            for(int i=0; i<items.length(); i++) {
+                                JSONObject item = (JSONObject)items.get(i);
+                                String name = item.getString("name");
+
+								/*JSONArray currencies = (JSONArray)(new JSONTokener(name).nextValue());
+								for(int j=0; j<currencies.length(); j++) {
+									JSONObject currency = (JSONObject)currencies.get(j);
+									c = item.getString("currencies");
+								}*/
+                                //String currency = item.get("currencies").getString("name");
+								/*JSONArray currencies = (JSONArray)(new JSONTokener("currencies").nextValue());
+								for(int j=0; j<currencies.length(); j++) {
+									JSONObject currency = (JSONObject)currencies.get(j);
+									c = currency.getString("name");
+								}*/
+                                //String flag = item.getString("flag");
+
+                                //textView.append(name);
+                                //textView.append("\n");
+                                ((EditText)findViewById(R.id.edit)).setText(name+"\n");
+                                //editText.append(name);
+                                //editText.append("\n");
+
+                                //textView.append(c);
+                                //textView.append("\n");
+                                //ImageView img = (ImageView)findViewById(R.id.img);
+                                //img.setImageBitmap((Bitmap)flag);
+                            }
+                        } catch (JSONException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+
+                    }
+
+                }.execute();
+
+            }
+
+        });
+        
     }
 
     /* Checks if external storage is available for read and write */
@@ -205,7 +290,7 @@ public class UserHomeActivity extends Activity {
             StringBuffer sb = new StringBuffer();
             URL url = null;
             try {
-                url = new URL("http://api.geonames.org/earthquakesJSON?north=44.1&south=-9.9&east=-22.4&west=55.2&username=demo");
+                url = new URL(BASE_URL+ENDPOINT+ACCESS_KEY);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
@@ -247,5 +332,53 @@ public class UserHomeActivity extends Activity {
 
     public void setResult(String result) {
         this.result = result;
+    }
+
+    public void selectFrag(View view) {
+        // MediaPlayer mp = MediaPlayer.create(this, R.raw.sound);
+        //mp.start();
+        Fragment fr = null;
+
+        /*if(view == findViewById(R.id.button2)) {
+            fr = new FragmentTwo();
+
+        }else {
+            fr = new FragmentOne();
+        }*/
+
+        FragmentManager fm = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fm.beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_place, fr);
+        fragmentTransaction.commit();
+    }
+
+    private String downloadHTML() throws Exception {
+
+        String id = "99";
+        String password = URLEncoder.encode("lj=lj&kljl/kj/", "UTF-8");
+
+		/*
+		 * URL url = new URL(
+		 * "http://androidserver.picturesquirrel.cloudbees.net/Server?id=" + id
+		 * + "&pass=" + password);
+		 */
+
+        URL url = new URL("https://restcountries.eu/rest/v2/name/ireland");
+
+        InputStream is = url.openStream();
+        InputStreamReader isr = new InputStreamReader(is);
+        BufferedReader br = new BufferedReader(isr);
+        String line = null;
+
+        // Use a StringBuilder to collect the lines of
+        // data we retrieve.
+        StringBuilder sb = new StringBuilder();
+
+        while ((line = br.readLine()) != null) {
+            sb.append(line);
+            sb.append("\n");
+        }
+
+        return sb.toString();
     }
 }
