@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -18,6 +19,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -26,6 +29,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -52,7 +59,7 @@ import java.util.ArrayList;
 
 import models.User;
 
-public class UserHomeActivity extends Activity {
+public class UserHomeActivity extends Activity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     // The number is to identify which activity has been returned from
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int PHOTO_TAKEN = 0;
@@ -75,16 +82,46 @@ public class UserHomeActivity extends Activity {
     public static final String BASE_URL = "http://apilayer.net/api/";
     public static final String ENDPOINT = "live";
 
+    private GoogleApiClient googleApiClient;
+    private Location lastLocation;
+    //private FusedLocationProviderClient mFusedLocationClient;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_home);
 
+        if (checkPlayServices()) {
+            Toast.makeText(this, "Play Services Available", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, "Play Services NOT Available", Toast.LENGTH_LONG).show();
+        }
+
+        if (googleApiClient == null) {
+            googleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
+
+        /*mFusedLocationClient = LocationServices.getFusedLocationProviderApi(this);
+        mFusedLocationClient.getLastLocation(googleApiClient)
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            // ...
+                        }
+                    }
+                });*/
+
         // User Object passed from LoginActivity, may need to change final
-        passedUser = (User)getIntent().getSerializableExtra("user");
-        textView = (TextView)this.findViewById(R.id.userInfo);
-        ((TextView)textView).setText("User Name: " + passedUser.getName() + "\nCountry: " + passedUser.getCountry()
+        passedUser = (User) getIntent().getSerializableExtra("user");
+        textView = (TextView) this.findViewById(R.id.userInfo);
+        ((TextView) textView).setText("User Name: " + passedUser.getName() + "\nCountry: " + passedUser.getCountry()
                 + "\nTap Photo to change Profile Picture");
 
         //editText = (EditText)findViewById(R.id.edit);
@@ -99,13 +136,13 @@ public class UserHomeActivity extends Activity {
         }
 
         // Use Image View in Layout
-        imageView = (ImageView)findViewById(R.id.imageView1);
+        imageView = (ImageView) findViewById(R.id.imageView1);
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 File gallery = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-                image = new File(gallery, passedUser.getName()+"profilePic.jpg");
+                image = new File(gallery, passedUser.getName() + "profilePic.jpg");
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 //fileUri = getOutputMediaFileUri(1);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(image));
@@ -118,13 +155,13 @@ public class UserHomeActivity extends Activity {
 
 
 
-        if(passedUser.getImg() != ""){
+        /*if(passedUser.getImg() != ""){
             //byte[] decodedString = Base64.decode(passedUser.getImg(), Base64.DEFAULT);
             //Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
 
             //Bitmap photo = BitmapFactory.decodeFile(Uri.fromFile(passedUser.getImg()));
             imageView.setImageURI(Uri.parse(passedUser.getImg()));
-        }
+        }*/
 
         // Add Firebase JSON data to ArrayList for later use
         mRootRef.addValueEventListener(new ValueEventListener() {
@@ -135,15 +172,17 @@ public class UserHomeActivity extends Activity {
                     userList.add(user);
                 }
             }
+
             @Override
-            public void onCancelled(DatabaseError databaseError) {}
+            public void onCancelled(DatabaseError databaseError) {
+            }
         });
 
 
         ///////////////////////////////////////////////////////////////////////////////
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
-        if(ni != null && ni.isConnected()){
+        if (ni != null && ni.isConnected()) {
             new MyAsyncTask().execute();
             try {
                 Thread.sleep(1000);
@@ -152,13 +191,13 @@ public class UserHomeActivity extends Activity {
             }
 
             System.out.println("Result in main thread: " + result);
-            ((EditText)findViewById(R.id.edit)).setText(result);
+            //((EditText) findViewById(R.id.edit)).setText(result);
         } else {
             Toast.makeText(this, "No Connection!", Toast.LENGTH_LONG).show();
-            ((EditText)findViewById(R.id.edit)).setText("No Internet Connection");
+            ((EditText) findViewById(R.id.edit)).setText("No Internet Connection");
         }
 
-        Button exchange = (Button)findViewById(R.id.exchangeBtn);
+        Button exchange = (Button) findViewById(R.id.exchangeBtn);
         exchange.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View v) {
@@ -176,13 +215,13 @@ public class UserHomeActivity extends Activity {
 
                     @Override
                     protected void onPostExecute(String result) {
-                        TextView textView = (TextView)findViewById(R.id.edit);
+                        TextView textView = (TextView) findViewById(R.id.edit);
 
                         try {
-                            JSONArray items = (JSONArray)(new JSONTokener(result).nextValue());
+                            JSONArray items = (JSONArray) (new JSONTokener(result).nextValue());
                             String c = "";
-                            for(int i=0; i<items.length(); i++) {
-                                JSONObject item = (JSONObject)items.get(i);
+                            for (int i = 0; i < items.length(); i++) {
+                                JSONObject item = (JSONObject) items.get(i);
                                 String name = item.getString("name");
 
 								/*JSONArray currencies = (JSONArray)(new JSONTokener(name).nextValue());
@@ -200,7 +239,7 @@ public class UserHomeActivity extends Activity {
 
                                 //textView.append(name);
                                 //textView.append("\n");
-                                ((EditText)findViewById(R.id.edit)).setText(name+"\n");
+                                ((EditText) findViewById(R.id.edit)).setText(name + "\n");
                                 //editText.append(name);
                                 //editText.append("\n");
 
@@ -221,7 +260,7 @@ public class UserHomeActivity extends Activity {
             }
 
         });
-        
+
     }
 
     /* Checks if external storage is available for read and write */
@@ -251,11 +290,11 @@ public class UserHomeActivity extends Activity {
     //////////////////Set usb to no
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         try {
-        if (requestCode == PHOTO_TAKEN) {
-            Bitmap photo = BitmapFactory.decodeFile(image.getAbsolutePath());
+            if (requestCode == PHOTO_TAKEN) {
+                Bitmap photo = BitmapFactory.decodeFile(image.getAbsolutePath());
 
-            if (photo != null && resultCode == RESULT_OK) {
-                /////////////////See if this can be put back to bitmap from string and should allow image save
+                if (photo != null && resultCode == RESULT_OK) {
+                    /////////////////See if this can be put back to bitmap from string and should allow image save
                     for (User u : userList) {
                         if (passedUser.getEmail().equals(u.getEmail())) {
                             //ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -267,19 +306,49 @@ public class UserHomeActivity extends Activity {
                             mRootRef.child(userName).getRef().child("img").setValue(photo.toString());
                         }
                     }
-                imageView.setImageBitmap(photo);
-                Toast.makeText(this, "WWWWWWWWWW" + photo, Toast.LENGTH_LONG).show();
-            } else {
-                //imageView.setImageBitmap(photo);
-                Toast.makeText(this, "Cannot Save Photo", Toast.LENGTH_LONG).show();
+                    imageView.setImageBitmap(photo);
+                    Toast.makeText(this, "WWWWWWWWWW" + photo, Toast.LENGTH_LONG).show();
+                } else {
+                    //imageView.setImageBitmap(photo);
+                    Toast.makeText(this, "Cannot Save Photo", Toast.LENGTH_LONG).show();
 
+                }
             }
-        }
-        } catch(NullPointerException e){
+        } catch (NullPointerException e) {
             Toast.makeText(this, "Issue Saving Photo, Try Again", Toast.LENGTH_LONG).show();
             e.printStackTrace();
             recreate();
         }
+    }
+
+    @Override
+    protected void onStart() {
+        googleApiClient.connect();
+        super.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        googleApiClient.disconnect();
+        super.onStop();
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        if(lastLocation != null){
+            ((EditText) findViewById(R.id.edit)).setText((int)lastLocation.getTime());
+            Toast.makeText(this,(int)lastLocation.getTime(),Toast.LENGTH_LONG).show();
+            Toast.makeText(this,"SDFGHJKLJHGFDSADFGHJKJHGFDS",Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {}
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -380,5 +449,22 @@ public class UserHomeActivity extends Activity {
         }
 
         return sb.toString();
+    }
+
+    public boolean checkPlayServices() {
+        GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
+        int result = googleApiAvailability.isGooglePlayServicesAvailable(this);
+        if(result != ConnectionResult.SUCCESS) {
+            if(googleApiAvailability.isUserResolvableError(result)) {
+                googleApiAvailability.getErrorDialog(this, result, 2404).show();
+            }
+            return false;
+        }
+        return true;
+    }
+
+    protected void showMap(View view){
+        Intent intent = new Intent(this, MapsActivity.class);
+        startActivity(intent);
     }
 }
