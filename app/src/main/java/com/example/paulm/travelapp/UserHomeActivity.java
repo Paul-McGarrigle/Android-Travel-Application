@@ -2,9 +2,6 @@ package com.example.paulm.travelapp;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -12,7 +9,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
-import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -45,24 +41,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 
+import models.Country;
 import models.User;
 
 public class UserHomeActivity extends Activity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
-    // The number is to identify which activity has been returned from
-    private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int PHOTO_TAKEN = 0;
     private ImageView imageView;
     private View textView;
@@ -71,38 +60,34 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
     private User passedUser;
     private Uri fileUri;
     private ArrayList<User> userList = new ArrayList<User>();
-    //public static final int MEDIA_TYPE_IMAGE = 1;
+    private String result;
+    private GoogleApiClient googleApiClient;
+    private SensorManager mSensorManager;
+    private ShakeListener mSensorListener;
+    private boolean error = false;
+
     // Firebase Realtime Database references
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
     DatabaseReference mUserRef = mRootRef.child("user");
-
-    private String result;
 
     // essential URL structure is built using constants
     public static final String ACCESS_KEY = "347b7abc9391d65585b6aa71c3e61577";
     public static final String BASE_URL = "http://apilayer.net/api/";
     public static final String ENDPOINT = "live";
 
-    private GoogleApiClient googleApiClient;
-    private Location lastLocation;
-    //private FusedLocationProviderClient mFusedLocationClient;
-
-    private SensorManager mSensorManager;
-
-    private ShakeListener mSensorListener;
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_home);
 
+        // Check if Google Play Services are available
         if (checkPlayServices()) {
             Toast.makeText(this, "Play Services Available", Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(this, "Play Services NOT Available", Toast.LENGTH_LONG).show();
         }
 
+        // Create a Google API Client if one does not already exist
         if (googleApiClient == null) {
             googleApiClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)
@@ -111,62 +96,32 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
                     .build();
         }
 
-        /*mFusedLocationClient = LocationServices.getFusedLocationProviderApi(this);
-        mFusedLocationClient.getLastLocation(googleApiClient)
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        // Got last known location. In some rare situations this can be null.
-                        if (location != null) {
-                            // ...
-                        }
-                    }
-                });*/
-
-        // User Object passed from LoginActivity, may need to change final
+        // User Object passed from LoginActivity, user info displayed in text view
         passedUser = (User) getIntent().getSerializableExtra("user");
         textView = (TextView) this.findViewById(R.id.userInfo);
         ((TextView) textView).setText("User Name: " + passedUser.getName() + "\nCountry: " + passedUser.getCountry()
                 + "\nTap Photo to change Profile Picture");
 
-        //editText = (EditText)findViewById(R.id.edit);
-
-        //isExternalStorageReadable();
-        //isExternalStorageWritable();
-        // REQUIRED for accessing external storage, taken from stackoverflow
+        // Required for accessing external storage, taken from stackoverflow, will prompt user for permissions
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         } else {
-            //your code
+            // No action as already have permissions
         }
 
-        // Use Image View in Layout
+        // When image view is clicked local camera application is invoked
         imageView = (ImageView) findViewById(R.id.imageView1);
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 File gallery = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
                 image = new File(gallery, passedUser.getName() + "profilePic.jpg");
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                //fileUri = getOutputMediaFileUri(1);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(image));
                 setResult(Activity.RESULT_OK, intent);
                 startActivityForResult(intent, PHOTO_TAKEN);
-
-
             }
         });
-
-
-
-        /*if(passedUser.getImg() != ""){
-            //byte[] decodedString = Base64.decode(passedUser.getImg(), Base64.DEFAULT);
-            //Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-
-            //Bitmap photo = BitmapFactory.decodeFile(Uri.fromFile(passedUser.getImg()));
-            imageView.setImageURI(Uri.parse(passedUser.getImg()));
-        }*/
 
         // Add Firebase JSON data to ArrayList for later use
         mRootRef.addValueEventListener(new ValueEventListener() {
@@ -177,98 +132,100 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
                     userList.add(user);
                 }
             }
-
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
+            public void onCancelled(DatabaseError databaseError) {}
         });
 
 
-        ///////////////////////////////////////////////////////////////////////////////
+        // Check network connection
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
         if (ni != null && ni.isConnected()) {
-            new MyAsyncTask().execute();
+            Log.d("NETWORK INFO: ", "Connection to network successful");
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
-            System.out.println("Result in main thread: " + result);
-            //((EditText) findViewById(R.id.edit)).setText(result);
         } else {
             Toast.makeText(this, "No Connection!", Toast.LENGTH_LONG).show();
             ((EditText) findViewById(R.id.edit)).setText("No Internet Connection");
         }
 
+        editText = (EditText)findViewById(R.id.enterDestination);
+
         Button exchange = (Button) findViewById(R.id.exchangeBtn);
-        exchange.setOnClickListener(new View.OnClickListener() {
+            exchange.setOnClickListener(new View.OnClickListener() {
 
-            public void onClick(View v) {
-                new AsyncTask<Void, Void, String>() {
-                    protected String doInBackground(Void... params) {
-
-                        try {
-                            return downloadHTML();
-                        } catch (Exception e) {
-                            Log.d("JWP", e.toString());
+                public void onClick(View v) {
+                    new AsyncTask<Void, Void, String>() {
+                        protected String doInBackground(Void... params) {
+                                try {
+                                    return jsonToString();
+                                } catch (Exception e) {
+                                }
+                            return "No data returned from web service";
                         }
 
-                        return "Can't reach server. Is Internet access enabled?";
-                    }
+                        @Override
+                        protected void onPostExecute(String result) {
+                            try {
+                                JSONArray items = (JSONArray) (new JSONTokener(result).nextValue());
+                                Country c = new Country();
+                                for (int i = 0; i < items.length(); i++) {
+                                    JSONObject item = (JSONObject) items.get(i);
+                                    c.setName(item.getString("name"));
+                                    c.setCapital(item.getString("capital"));
+                                    c.setRegion(item.getString("region"));
+                                    c.setDemonym(item.getString("demonym"));
+                                    c.setCurrencies(item.getString("currencies"));
+                                    c.setLanguages(item.getString("languages"));
+                                    String loc = item.getString("latlng");
+                                    String lat = loc.substring(1, loc.indexOf(","));
+                                    String lng = loc.substring(loc.indexOf(",") + 1, loc.length() - 1);
+                                    c.setLat(Double.valueOf(lat));
+                                    c.setLng(Double.valueOf(lng));
 
-                    @Override
-                    protected void onPostExecute(String result) {
-                        TextView textView = (TextView) findViewById(R.id.edit);
+                                    try {
+                                        JSONArray currencies = (JSONArray) (new JSONTokener(c.getCurrencies()).nextValue());
+                                        for (int j = 0; j < currencies.length(); j++) {
+                                            JSONObject curr = (JSONObject) currencies.get(j);
+                                            c.setCurrencies(curr.getString("code"));
+                                        }
+                                    } catch (Exception e) {
+                                    }
 
-                        try {
-                            JSONArray items = (JSONArray) (new JSONTokener(result).nextValue());
-                            String c = "";
-                            for (int i = 0; i < items.length(); i++) {
-                                JSONObject item = (JSONObject) items.get(i);
-                                String name = item.getString("name");
+                                    try {
+                                        JSONArray languages = (JSONArray) (new JSONTokener(c.getLanguages()).nextValue());
+                                        for (int k = 0; k < languages.length(); k++) {
+                                            JSONObject curr = (JSONObject) languages.get(k);
+                                            c.setLanguages(curr.getString("name"));
+                                        }
+                                    } catch (Exception e) {
+                                    }
 
-								/*JSONArray currencies = (JSONArray)(new JSONTokener(name).nextValue());
-								for(int j=0; j<currencies.length(); j++) {
-									JSONObject currency = (JSONObject)currencies.get(j);
-									c = item.getString("currencies");
-								}*/
-                                //String currency = item.get("currencies").getString("name");
-								/*JSONArray currencies = (JSONArray)(new JSONTokener("currencies").nextValue());
-								for(int j=0; j<currencies.length(); j++) {
-									JSONObject currency = (JSONObject)currencies.get(j);
-									c = currency.getString("name");
-								}*/
-                                //String flag = item.getString("flag");
-
-                                //textView.append(name);
-                                //textView.append("\n");
-                                ((EditText) findViewById(R.id.edit)).setText(name + "\n");
-                                //editText.append(name);
-                                //editText.append("\n");
-
-                                //textView.append(c);
-                                //textView.append("\n");
-                                //ImageView img = (ImageView)findViewById(R.id.img);
-                                //img.setImageBitmap((Bitmap)flag);
+                                    EditText e = ((EditText) findViewById(R.id.edit));
+                                    e.append(c.getLat() + "\n");
+                                    e.append(c.getLng() + "\n");
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
                             }
-                        } catch (JSONException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
                         }
+                    }.execute();
+                }
 
-                    }
+            });
 
-                }.execute();
+        if(error){
+            editText.setError("No Destination Entered");
+            editText.requestFocus();
+            error = false;
+        }
 
-            }
-
-        });
-
+        // Action taken when device is shaken
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mSensorListener = new ShakeListener();
-
         mSensorListener.setOnShakeListener(new ShakeListener.OnShakeListener() {
 
             public void onShake() {
@@ -276,39 +233,64 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
                 logout();
             }
         });
-
     }
 
+    // When app starts connection is made to Google API via the client instance
+    @Override
+    protected void onStart() {
+        googleApiClient.connect();
+        super.onStart();
+    }
+
+    // When App is stopped connection to Google API is closed
+    @Override
+    protected void onStop() {
+        googleApiClient.disconnect();
+        super.onStop();
+    }
+
+    // When App resumes from paused state sensor listener is re-registered
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mSensorManager.registerListener(mSensorListener,
+                mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                SensorManager.SENSOR_DELAY_UI);
+    }
+
+    // When App is paused sensor listener is unregistered
+    @Override
+    protected void onPause() {
+        mSensorManager.unregisterListener(mSensorListener);
+        super.onPause();
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {}
+
+    @Override
+    public void onConnectionSuspended(int i) {}
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {}
+
+    // This method is invoked by sensors
     public void logout(){
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
     }
 
-    /* Checks if external storage is available for read and write */
-    public boolean isExternalStorageWritable() {
+    // Check if storage can be written to/read from
+    public boolean checkPermissions() {
         String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            Toast.makeText(this, "Writable", Toast.LENGTH_LONG).show();
+        if (Environment.MEDIA_MOUNTED.equals(state)|| Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
             return true;
         }
-        Toast.makeText(this, "Not Writable", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Not Writable/Readable", Toast.LENGTH_LONG).show();
         return false;
     }
 
-    /* Checks if external storage is available to at least read */
-    public boolean isExternalStorageReadable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state) ||
-                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-            Toast.makeText(this, "Readable", Toast.LENGTH_LONG).show();
-            return true;
-        }
-        Toast.makeText(this, "Not Readable", Toast.LENGTH_LONG).show();
-        return false;
-    }
-
-    // This must be overwritten to get result of intent, Sub-Activity
-    //////////////////Set usb to no
+    // This is a Sub-Activity it takes over when the Camera Intent is finished
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         try {
             if (requestCode == PHOTO_TAKEN) {
@@ -342,38 +324,8 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
         }
     }
 
-    @Override
-    protected void onStart() {
-        googleApiClient.connect();
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        googleApiClient.disconnect();
-        super.onStop();
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-        lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-        if(lastLocation != null){
-            ((EditText) findViewById(R.id.edit)).setText((int)lastLocation.getTime());
-            Toast.makeText(this,(int)lastLocation.getTime(),Toast.LENGTH_LONG).show();
-            Toast.makeText(this,"SDFGHJKLJHGFDSADFGHJKJHGFDS",Toast.LENGTH_LONG).show();
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {}
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-    }
-
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    class MyAsyncTask extends AsyncTask {
+    /*class MyAsyncTask extends AsyncTask {
 
         @Override
         protected Object doInBackground(Object[] params) {
@@ -418,60 +370,53 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
 
             return sb.toString();
         }
-    }
+    }*/
 
     public void setResult(String result) {
         this.result = result;
     }
 
-    public void selectFrag(View view) {
+    /*public void selectFrag(View view) {
         // MediaPlayer mp = MediaPlayer.create(this, R.raw.sound);
         //mp.start();
         Fragment fr = null;
 
-        /*if(view == findViewById(R.id.button2)) {
+        *//*if(view == findViewById(R.id.button2)) {
             fr = new FragmentTwo();
 
         }else {
             fr = new FragmentOne();
-        }*/
+        }*//*
 
         FragmentManager fm = getFragmentManager();
         FragmentTransaction fragmentTransaction = fm.beginTransaction();
         fragmentTransaction.replace(R.id.fragment_place, fr);
         fragmentTransaction.commit();
-    }
+    }*/
 
-    private String downloadHTML() throws Exception {
+    // Gets JSON data from Web Service and converts it into a string
+    private String jsonToString() throws Exception {
+        if(editText.getText().toString() == null) {
+            editText.setError("No Destination Entered");
+            editText.requestFocus();
+            return "";
+        }
 
-        String id = "99";
-        String password = URLEncoder.encode("lj=lj&kljl/kj/", "UTF-8");
-
-		/*
-		 * URL url = new URL(
-		 * "http://androidserver.picturesquirrel.cloudbees.net/Server?id=" + id
-		 * + "&pass=" + password);
-		 */
-
-        URL url = new URL("https://restcountries.eu/rest/v2/name/ireland");
-
+        URL url = new URL("https://restcountries.eu/rest/v2/name/"+editText.getText().toString());
         InputStream is = url.openStream();
         InputStreamReader isr = new InputStreamReader(is);
         BufferedReader br = new BufferedReader(isr);
-        String line = null;
+        String line = "";
 
-        // Use a StringBuilder to collect the lines of
-        // data we retrieve.
         StringBuilder sb = new StringBuilder();
-
         while ((line = br.readLine()) != null) {
             sb.append(line);
             sb.append("\n");
         }
-
         return sb.toString();
     }
 
+    // This Method checks play services, taken from Google Docs
     public boolean checkPlayServices() {
         GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
         int result = googleApiAvailability.isGooglePlayServicesAvailable(this);
@@ -484,22 +429,9 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
         return true;
     }
 
+    // Invokes Google Maps
     protected void showMap(View view){
         Intent intent = new Intent(this, MapsActivity.class);
         startActivity(intent);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mSensorManager.registerListener(mSensorListener,
-                mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                SensorManager.SENSOR_DELAY_UI);
-    }
-
-    @Override
-    protected void onPause() {
-        mSensorManager.unregisterListener(mSensorListener);
-        super.onPause();
     }
 }

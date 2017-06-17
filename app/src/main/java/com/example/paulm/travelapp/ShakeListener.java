@@ -6,7 +6,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
 
-// This class was taken from stackoverflow
+// This class determines how to calculate if the device has been shaked, this calculation was taken from
+// an online source at https://stackoverflow.com/questions/2317428/android-i-want-to-shake-it
 public class ShakeListener implements SensorEventListener {
 
 
@@ -112,9 +113,7 @@ public class ShakeListener implements SensorEventListener {
         }
     }
 
-    /**
-     * Resets the shake parameters to their default values.
-     */
+    // Set shake values back to 0
     private void resetShakeParameters() {
         mFirstDirectionChangeTime = 0;
         mDirectionChangeCount = 0;
@@ -125,7 +124,5 @@ public class ShakeListener implements SensorEventListener {
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-    }
-
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 }

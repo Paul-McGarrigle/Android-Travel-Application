@@ -1,6 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
     compileSdkVersion 25
     buildToolsVersion "25.0.3"
     defaultConfig {
@@ -33,6 +40,9 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:25.3.1'
     compile 'com.google.android.gms:play-services-maps:9.0.2'
     compile 'com.google.android.gms:play-services-location:9.0.2'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.0.pr4'
+    compile group: 'com.google.code.gson', name: 'gson', version: '1.7.2'
+
     testCompile 'junit:junit:4.12'
 }
 
