@@ -69,12 +69,11 @@
                 android:id="@+id/reg_link"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="No Account? Register Here"
+                android:text="Shake Phone to Logout"
                 android:gravity="center"
                 android:textSize="20dip"
                 android:layout_marginTop="30dip"
-                android:textColor="#3F51B5"
-                android:onClick="register"/>
+                android:textColor="#3F51B5" />
 
         </LinearLayout>
     </ScrollView>

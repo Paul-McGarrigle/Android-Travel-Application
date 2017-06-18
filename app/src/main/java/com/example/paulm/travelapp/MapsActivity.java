@@ -24,9 +24,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        // The passed Country Object
         destCountry = (Country) getIntent().getSerializableExtra("destCountry");
-
-
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -36,6 +35,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    // Method edited from built in Android Studio Map Activity Template
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -49,8 +49,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.addMarker(new MarkerOptions().position(destination).title("Marker in " + destCountry.getName()));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(destination));
 
+        // PolylineOptions taken from stackoverflow.com
         PolylineOptions line= new PolylineOptions().add(new LatLng(53.0,-8.0), destination).width(5).color(Color.RED);
-
         mMap.addPolyline(line);
     }
 }

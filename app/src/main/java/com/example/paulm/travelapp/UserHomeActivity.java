@@ -53,6 +53,7 @@ import models.Country;
 import models.User;
 
 public class UserHomeActivity extends Activity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+    // Declare Variables
     private static final int PHOTO_TAKEN = 0;
     private ImageView imageView;
     private View textView;
@@ -72,11 +73,6 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
     DatabaseReference mUserRef = mRootRef.child("user");
 
-    // essential URL structure is built using constants
-    public static final String ACCESS_KEY = "347b7abc9391d65585b6aa71c3e61577";
-    public static final String BASE_URL = "http://apilayer.net/api/";
-    public static final String ENDPOINT = "live";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,6 +85,7 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
             Toast.makeText(this, "Play Services NOT Available", Toast.LENGTH_LONG).show();
         }
 
+        // Check the device storage is readable and writable
         checkPermissions();
 
         // Create a Google API Client if one does not already exist
@@ -107,7 +104,9 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
         ((TextView) textView).setText("User Name: " + passedUser.getName() + "\nCountry: " + passedUser.getCountry()
                 + "\nTap Photo to change Profile Picture");
 
-        // Required for accessing external storage, taken from stackoverflow, will prompt user for permissions
+        // Required for accessing external storage, taken from stackoverflow.com, will prompt user for permissions
+        // on initial running of the application, once the user has allowed the application the rights to the permissions
+        // the user will not be prompted in the future
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         } else {
@@ -154,11 +153,12 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
             }
         } else {
             Toast.makeText(this, "No Connection!", Toast.LENGTH_LONG).show();
-            ((EditText) findViewById(R.id.edit)).setText("No Internet Connection");
         }
 
         editText = (EditText)findViewById(R.id.enterDestination);
 
+        // This listener will search for flights based on the users country and specified destination country
+        // it invokes a Google search using the built in browser of the device
         Button search = (Button)findViewById(R.id.flightBtn);
         search.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -170,6 +170,8 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
             }
         });
 
+        // This method invokes the jsonToString Method and then parses the returned data, some aspects of this method
+        // where taken from caveofprogramming.com
         Button exchange = (Button) findViewById(R.id.exchangeBtn);
             exchange.setOnClickListener(new View.OnClickListener() {
 
@@ -296,7 +298,7 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {}
 
-    // This method is invoked by sensors
+    // This method logs the user out, it is invoked by sensors when shaking takes place
     public void logout(){
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
@@ -319,7 +321,6 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
                 Bitmap photo = BitmapFactory.decodeFile(image.getAbsolutePath());
 
                 if (photo != null && resultCode == RESULT_OK) {
-                    /////////////////See if this can be put back to bitmap from string and should allow image save
                     for (User u : userList) {
                         if (passedUser.getEmail().equals(u.getEmail())) {
                             //ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -332,7 +333,7 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
                         }
                     }
                     imageView.setImageBitmap(photo);
-                    Toast.makeText(this, "WWWWWWWWWW" + photo, Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, photo + " was taken successfully", Toast.LENGTH_LONG).show();
                 } else {
                     //imageView.setImageBitmap(photo);
                     Toast.makeText(this, "Cannot Save Photo", Toast.LENGTH_LONG).show();
@@ -346,75 +347,9 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
         }
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    /*class MyAsyncTask extends AsyncTask {
-
-        @Override
-        protected Object doInBackground(Object[] params) {
-            StringBuffer sb = new StringBuffer();
-            URL url = null;
-            try {
-                url = new URL(BASE_URL+ENDPOINT+ACCESS_KEY);
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-
-            HttpURLConnection c = null;
-
-            try {
-                c = (HttpURLConnection) url.openConnection();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                c.setRequestMethod("POST");
-            } catch (ProtocolException e) {
-                e.printStackTrace();
-            }
-
-            InputStream in = null;
-            try {
-                System.out.println("Responce code: " + c.getResponseCode());
-                in = new BufferedInputStream(c.getInputStream());
-                BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-                String line = "";
-
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            setResult(sb.toString());
-            System.out.println("Responce Json: " + sb.toString());
-
-            return sb.toString();
-        }
-    }*/
-
     public void setResult(String result) {
         this.result = result;
     }
-
-    /*public void selectFrag(View view) {
-        // MediaPlayer mp = MediaPlayer.create(this, R.raw.sound);
-        //mp.start();
-        Fragment fr = null;
-
-        *//*if(view == findViewById(R.id.button2)) {
-            fr = new FragmentTwo();
-
-        }else {
-            fr = new FragmentOne();
-        }*//*
-
-        FragmentManager fm = getFragmentManager();
-        FragmentTransaction fragmentTransaction = fm.beginTransaction();
-        fragmentTransaction.replace(R.id.fragment_place, fr);
-        fragmentTransaction.commit();
-    }*/
 
     // Gets JSON data from Web Service and converts it into a string
     private String jsonToString() throws Exception {
@@ -459,17 +394,17 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
         startActivity(intent);
     }
 
+    // Invokes DestinationInfoActivity
     protected void destinationInfo(View view){
         Intent intent = new Intent(this, DestinationInfoActivity.class);
         intent.putExtra("destCountry", destCountry);
-        //intent.putExtra("user", passedUser);
         startActivity(intent);
     }
 
+    // Invokes CurrencyConverterActivity
     protected void currencyConverter(View view){
         Intent intent = new Intent(this, CurrencyConverterActivity.class);
         intent.putExtra("destCountry", destCountry);
-        //intent.putExtra("user", passedUser);
         startActivity(intent);
     }
 

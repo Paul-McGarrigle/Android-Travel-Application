@@ -1,5 +1,9 @@
 package com.example.paulm.travelapp;
 
+import android.content.Context;
+import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -24,6 +28,8 @@ public class CurrencyConverterActivity extends AppCompatActivity {
     private String exchangeRate;
     private EditText inputView;
     private double input;
+    private SensorManager mSensorManager;
+    private ShakeListener mSensorListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +39,7 @@ public class CurrencyConverterActivity extends AppCompatActivity {
         destCountry = (Country) getIntent().getSerializableExtra("destCountry");
         inputView = (EditText)findViewById(R.id.cashIn);
 
-
+        // Method explained in UserHomeActivity
         final Button exchange = (Button) findViewById(R.id.convertBtn);
         exchange.setOnClickListener(new View.OnClickListener() {
 
@@ -53,6 +59,7 @@ public class CurrencyConverterActivity extends AppCompatActivity {
                                 JSONObject item = (JSONObject) (new JSONTokener(result).nextValue());
                                 exchangeRate = item.getString("rates");
 
+                                // Parsed data is used to perform currency calculations
                                 EditText e = (EditText)findViewById(R.id.cashOut);
                                 String s = exchangeRate.substring(exchangeRate.indexOf(":")+1, exchangeRate.length()-1);
                                 double rate = Double.valueOf(s);
@@ -64,18 +71,46 @@ public class CurrencyConverterActivity extends AppCompatActivity {
                                 }
                                 double output = rate * input;
                                 e.setText(destCountry.getCurrencies()+input+" at a rate of " + rate + " will return €"+output);
-                                Toast.makeText(CurrencyConverterActivity.this, "HERE", Toast.LENGTH_LONG).show();
-
                             } catch (Exception e) {
                                 inputView.requestFocus();
                                 inputView.setError("Invalid Amount Entered!");
                                 e.printStackTrace();
                             }
                         }
-                    }.execute();}
+                    }.execute();
+            }
         });
+
+        // Action taken when device is shaken
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mSensorListener = new ShakeListener();
+        mSensorListener.setOnShakeListener(new ShakeListener.OnShakeListener() {
+
+            public void onShake() {
+                Toast.makeText(CurrencyConverterActivity.this, "Logout!", Toast.LENGTH_SHORT).show();
+                logout();
+            }
+        });
+
     }
 
+    // When App resumes from paused state sensor listener is re-registered
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mSensorManager.registerListener(mSensorListener,
+                mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                SensorManager.SENSOR_DELAY_UI);
+    }
+
+    // When App is paused sensor listener is unregistered
+    @Override
+    protected void onPause() {
+        mSensorManager.unregisterListener(mSensorListener);
+        super.onPause();
+    }
+
+    // Method calls the fixer.io API for currency information and converts data into a string
     private String jsonToString() throws Exception {
         URL url = new URL("http://api.fixer.io/latest?symbols=" + destCountry.getCurrencies());
         InputStream is = url.openStream();
@@ -89,5 +124,11 @@ public class CurrencyConverterActivity extends AppCompatActivity {
             sb.append("\n");
         }
         return sb.toString();
+    }
+
+    // This method logs the user out, it is invoked by sensors when shaking takes place
+    public void logout(){
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
     }
 }
