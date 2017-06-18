@@ -1,4 +1,15 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:padding="40dp"
+    android:textSize="80px"
+    android:shadowColor="@color/colorPrimary"
+    android:textColor="@color/colorPrimary"
+    android:fontFamily="sans-serif"
+    android:textStyle="italic"
+    >
+</TextView>
+<!--<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,7 +21,7 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.paulm.travelapp.LoginActivity">
 
-    <!-- Login progress -->
+    &lt;!&ndash; Login progress &ndash;&gt;
     <ProgressBar
         android:id="@+id/login_progress"
         style="?android:attr/progressBarStyleLarge"
@@ -127,4 +138,4 @@
 
         </LinearLayout>
     </ScrollView>
-</LinearLayout>
+</LinearLayout>-->

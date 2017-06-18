@@ -109,6 +109,17 @@
                 android:text="@string/reg_action_sign_in"
                 android:textStyle="bold" />
 
+            <TextView
+                android:id="@+id/reg_link"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/log"
+                android:gravity="center"
+                android:textSize="20dip"
+                android:layout_marginTop="30dip"
+                android:textColor="#3F51B5"
+                android:onClick="loginPage"/>
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

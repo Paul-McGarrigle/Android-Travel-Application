@@ -224,4 +224,10 @@ public class RegisterActivity extends Activity {
             mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }
+
+    // Invoked when link clicked
+    protected void loginPage(View view){
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+    }
 }
