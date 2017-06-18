@@ -1,10 +1,12 @@
 package models;
 
+import java.io.Serializable;
+
 /**
  * Created by PaulM on 17/06/2017.
  */
 // Might have to change arrays to arraylists
-public class Country {
+public class Country implements Serializable {
     private String name;
     private String capital;
     private String region;

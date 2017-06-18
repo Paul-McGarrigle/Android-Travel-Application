@@ -12,7 +12,6 @@ public class ActionListFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
 
 
-
         return inflater.inflate(
                 R.layout.fragment_action_list, container, false);
 

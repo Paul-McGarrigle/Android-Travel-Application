@@ -65,6 +65,7 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
     private SensorManager mSensorManager;
     private ShakeListener mSensorListener;
     private boolean error = false;
+    private Country userCountry, destCountry;
 
     // Firebase Realtime Database references
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
@@ -207,6 +208,7 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
                                     EditText e = ((EditText) findViewById(R.id.edit));
                                     e.append(c.getLat() + "\n");
                                     e.append(c.getLng() + "\n");
+                                    destCountry = c;
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -432,6 +434,8 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
     // Invokes Google Maps
     protected void showMap(View view){
         Intent intent = new Intent(this, MapsActivity.class);
+        intent.putExtra("destCountry", destCountry);
+        intent.putExtra("user", passedUser);
         startActivity(intent);
     }
 }
