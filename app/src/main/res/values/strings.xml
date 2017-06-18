@@ -10,9 +10,10 @@
     <string name="prompt_destination">Enter Destination</string>
     <string name="reg_action_sign_in">Register</string>
     <string name="action_sign_in_short">Sign in</string>
-    <string name="time_btn">See Time Difference</string>
-    <string name="weather_btn">See Todays Weather</string>
-    <string name="exchange_btn">Get Exchange Rate</string>
+    <string name="info_btn">Get Destination Information</string>
+    <string name="flight_btn">Flights to Destination</string>
+    <string name="dest_btn">Select This Destination</string>
+    <string name="curr_btn">Currency Converter</string>
     <string name="translate_btn">Translate Phrase</string>
     <string name="error_invalid_email">Invalid, accepted email format is digits@digits.digits</string>
     <string name="error_email_not_in_use">No account associated with this email, please use register link</string>
@@ -21,11 +22,13 @@
     <string name="error_incorrect_password">This password is incorrect</string>
     <string name="error_wrong_password">Password does not match email</string>
     <string name="error_field_required">This field is required</string>
-    <string name="permission_rationale">"Contacts permissions are needed for providing email
-        completions."
-    </string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email completions."</string>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_register">Sign up</string>
+    <string name="map_activity">Map of Destination</string>
+    <string name="prompt_cashIn">Enter Amount</string>
+    <string name="prompt_cashOut">Output</string>
+    <string name="action_convert">Convert</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

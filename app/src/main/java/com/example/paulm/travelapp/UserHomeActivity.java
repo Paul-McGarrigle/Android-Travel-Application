@@ -2,6 +2,7 @@ package com.example.paulm.travelapp;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -18,6 +19,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -37,7 +39,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -83,10 +84,12 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
 
         // Check if Google Play Services are available
         if (checkPlayServices()) {
-            Toast.makeText(this, "Play Services Available", Toast.LENGTH_LONG).show();
+            Log.d("Success","Play Services Available");
         } else {
             Toast.makeText(this, "Play Services NOT Available", Toast.LENGTH_LONG).show();
         }
+
+        checkPermissions();
 
         // Create a Google API Client if one does not already exist
         if (googleApiClient == null) {
@@ -95,6 +98,7 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
                     .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
                     .build();
+            Log.d("Success","Google API Client Created");
         }
 
         // User Object passed from LoginActivity, user info displayed in text view
@@ -107,7 +111,7 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         } else {
-            // No action as already have permissions
+            Log.d("Success","Have Desired Permissions");
         }
 
         // When image view is clicked local camera application is invoked
@@ -142,7 +146,7 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
         if (ni != null && ni.isConnected()) {
-            Log.d("NETWORK INFO: ", "Connection to network successful");
+            Log.d("Success","Successful Connection to Network");
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -155,22 +159,43 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
 
         editText = (EditText)findViewById(R.id.enterDestination);
 
+        Button search = (Button)findViewById(R.id.flightBtn);
+        search.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
+                String keyword= "Flights " + passedUser.getCountry() + " to " + destCountry.getName();
+                intent.putExtra(SearchManager.QUERY, keyword);
+                startActivity(intent);
+            }
+        });
+
         Button exchange = (Button) findViewById(R.id.exchangeBtn);
             exchange.setOnClickListener(new View.OnClickListener() {
 
                 public void onClick(View v) {
+                    editText.setError(null);
+                    if(TextUtils.isEmpty(editText.getText())){
+                        editText.requestFocus();
+                        editText.setError("No Destination Entered!");
+                    } else {
+
                     new AsyncTask<Void, Void, String>() {
                         protected String doInBackground(Void... params) {
-                                try {
-                                    return jsonToString();
-                                } catch (Exception e) {
-                                }
-                            return "No data returned from web service";
+                            try {
+                                return jsonToString();
+                            } catch (Exception e) {
+                            }
+                            return "";
                         }
 
                         @Override
                         protected void onPostExecute(String result) {
                             try {
+                                findViewById(R.id.flightBtn).setVisibility(View.VISIBLE);
+                                findViewById(R.id.mapBtn).setVisibility(View.VISIBLE);
+                                findViewById(R.id.infoBtn).setVisibility(View.VISIBLE);
+                                findViewById(R.id.currBtn).setVisibility(View.VISIBLE);
                                 JSONArray items = (JSONArray) (new JSONTokener(result).nextValue());
                                 Country c = new Country();
                                 for (int i = 0; i < items.length(); i++) {
@@ -204,26 +229,21 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
                                         }
                                     } catch (Exception e) {
                                     }
-
-                                    EditText e = ((EditText) findViewById(R.id.edit));
-                                    e.append(c.getLat() + "\n");
-                                    e.append(c.getLng() + "\n");
                                     destCountry = c;
                                 }
-                            } catch (JSONException e) {
+                            } catch (Exception e) {
+                                findViewById(R.id.flightBtn).setVisibility(View.INVISIBLE);
+                                findViewById(R.id.mapBtn).setVisibility(View.INVISIBLE);
+                                findViewById(R.id.infoBtn).setVisibility(View.INVISIBLE);
+                                findViewById(R.id.currBtn).setVisibility(View.INVISIBLE);
+                                editText.requestFocus();
+                                editText.setError("Invalid Destination!");
                                 e.printStackTrace();
                             }
                         }
-                    }.execute();
+                    }.execute();}
                 }
-
             });
-
-        if(error){
-            editText.setError("No Destination Entered");
-            editText.requestFocus();
-            error = false;
-        }
 
         // Action taken when device is shaken
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -438,4 +458,19 @@ public class UserHomeActivity extends Activity implements GoogleApiClient.Connec
         intent.putExtra("user", passedUser);
         startActivity(intent);
     }
+
+    protected void destinationInfo(View view){
+        Intent intent = new Intent(this, DestinationInfoActivity.class);
+        intent.putExtra("destCountry", destCountry);
+        //intent.putExtra("user", passedUser);
+        startActivity(intent);
+    }
+
+    protected void currencyConverter(View view){
+        Intent intent = new Intent(this, CurrencyConverterActivity.class);
+        intent.putExtra("destCountry", destCountry);
+        //intent.putExtra("user", passedUser);
+        startActivity(intent);
+    }
+
 }

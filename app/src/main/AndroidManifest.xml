@@ -7,6 +7,18 @@
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
+    <uses-feature
+        android:name="android.hardware.camera2"
+        android:required="false" />
+    <!-- <uses-permission android:name="android.permission.CAMERA"></uses-permission> -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/icon"
@@ -14,10 +26,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
+
         <activity
             android:name=".LoginActivity"
             android:label="@string/app_name">
@@ -29,19 +41,11 @@
         </activity>
         <activity
             android:name=".RegisterActivity"
-            android:label="@string/title_activity_register" ></activity>
-        <activity android:name=".UserHomeActivity"></activity>
-        <activity android:name=".MapsActivity"></activity>
+            android:label="@string/title_activity_register" />
+        <activity android:name=".UserHomeActivity" />
+        <activity android:name=".MapsActivity" />
+        <activity android:name=".DestinationInfoActivity" />
+        <activity android:name=".CurrencyConverterActivity"></activity>
     </application>
-
-    <uses-feature android:name="android.hardware.camera2" android:required="false"></uses-feature>
-    <!-- <uses-permission android:name="android.permission.CAMERA"></uses-permission> -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" ></uses-permission>
-    <uses-permission android:name="android.permission.RECORD_AUDIO"></uses-permission>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
-    <uses-permission android:name="android.permission.INTERNET"></uses-permission>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"></uses-permission>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"></uses-permission>
 
 </manifest>

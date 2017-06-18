@@ -4,39 +4,52 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-
-    <Button
-        android:id="@+id/timeBtn"
-        style="?android:textAppearanceSmall"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:text="@string/time_btn"
-        android:textStyle="bold" />
-    <Button
-        android:id="@+id/weatherBtn"
-        style="?android:textAppearanceSmall"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:text="@string/weather_btn"
-        android:textStyle="bold" />
     <Button
         android:id="@+id/exchangeBtn"
         style="?android:textAppearanceSmall"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
-        android:text="@string/exchange_btn"
+        android:text="@string/dest_btn"
         android:textStyle="bold" />
     <Button
-        android:id="@+id/translateBtn"
+        android:id="@+id/infoBtn"
         style="?android:textAppearanceSmall"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
-        android:text="@string/translate_btn"
+        android:text="@string/info_btn"
         android:textStyle="bold"
-        android:onClick="showMap"/>
+        android:onClick="destinationInfo"
+        android:visibility="invisible"/>
+    <Button
+        android:id="@+id/flightBtn"
+        style="?android:textAppearanceSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="@string/flight_btn"
+        android:textStyle="bold"
+        android:visibility="invisible"/>
+    <Button
+        android:id="@+id/mapBtn"
+        style="?android:textAppearanceSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="@string/map_activity"
+        android:textStyle="bold"
+        android:onClick="showMap"
+        android:visibility="invisible"/>
+    <Button
+        android:id="@+id/currBtn"
+        style="?android:textAppearanceSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="@string/curr_btn"
+        android:textStyle="bold"
+        android:onClick="currencyConverter"
+        android:visibility="invisible"/>
 
 </LinearLayout>
